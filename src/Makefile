@@ -1,0 +1,49 @@
+# pgafis/Makefile
+
+MODULE_big = pgafis
+OBJS = pgafis.o
+
+EXTENSION = pgafis
+DATA = pgafis--1.2.sql pgafis--unpackaged--1.2.sql
+
+NBIS_HOME = /opt/nbis-5.0.0
+#NBIS_HOME = /opt/nbis-4.2.0
+
+NFIQ_LIBS = -lnfiq -lm
+BOZORTH_LIBS = -lbozorth3 -lm
+IMGTOOLS_LIBS = -limage -lihead -lwsq -ljpegl -lpng -lfet -lioutil -lutil -lm
+NBIS_LIB = ${NBIS_HOME}/lib/lib
+
+SHLIB_LINK = ${NBIS_LIB}bozorth3.a \
+	${NBIS_LIB}mindtct.a \
+	${NBIS_LIB}nfiq.a ${NBIS_LIB}mlp.a ${NBIS_LIB}cblas.a \
+	${NBIS_LIB}wsq.a ${NBIS_LIB}ioutil.a ${NBIS_LIB}fet.a \
+	${NBIS_LIB}jpegl.a \
+	${NBIS_LIB}png.a \
+	${NBIS_LIB}util.a ${NBIS_LIB}image.a
+
+override CPPFLAGS := -I${NBIS_HOME}/include -L${NBIS_HOME}/lib ${NFIQ_LIBS} ${BOZORTH_LIBS} ${IMGTOOLS_LIBS}
+override LDFLAGS := -fPIC
+
+#-O2 -w -ansi -D_POSIX_SOURCE -D__NBISLE__ -D__NBIS_OPENJPEG__ -D__NBIS_PNG__ -m32 -fPIC
+
+ifdef USE_PGXS
+PG_CONFIG = pg_config
+PGXS := $(shell $(PG_CONFIG) --pgxs)
+include $(PGXS)
+else
+subdir = contrib/pgafis
+top_builddir = /usr/lib/postgresql/10/lib/pgxs
+
+
+include $(top_builddir)/src/Makefile.global
+top_srcdir = /usr/lib/postgresql/10/lib/pgxs
+NO_PGXS = 1
+include $(top_srcdir)/src/makefiles/pgxs.mk
+
+#include /home/fac/fac/postgresql-10.4/contrib/contrib-global.mk
+#$(top_srcdir)/contrib/contrib-global.mk
+endif
+
+pgafis.o: pgafis.c pgafis.h cwsq.h fiq.h mindt.h match.h xyt.h mdt.h
+
